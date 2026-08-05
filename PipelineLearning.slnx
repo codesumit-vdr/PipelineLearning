@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/PipelineLearning.Api/PipelineLearning.Api.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/PipelineLearning.Tests/PipelineLearning.Tests.csproj" />
+  </Folder>
+</Solution>
