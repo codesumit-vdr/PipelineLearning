@@ -32,7 +32,15 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
+      - name: Cache Sonar Packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.sonar/cache
+          key: ${{ runner.os }}-sonar
+          restore-keys: ${{ runner.os }}-sonar
 
+      - name: Install SonarScanner
+        run: dotnet tool install --global dotnet-sonarscanner
       - name: Cache NuGet Packages
         uses: actions/cache@v4
         with:
@@ -43,6 +51,14 @@ jobs:
 
       - name: Restore Dependencies
         run: dotnet restore
+      - name: Begin Sonar Analysis
+        run: |
+          dotnet sonarscanner begin \
+            /k:"${{ secrets.SONAR_PROJECT_KEY }}" \
+            /o:"${{ secrets.SONAR_ORGANIZATION }}" \
+            /d:sonar.token="${{ secrets.SONAR_TOKEN }}" \
+            /d:sonar.host.url="https://sonarcloud.io" \
+            /d:sonar.cs.opencover.reportsPaths="**/coverage.opencover.xml"
 
       - name: Build Solution
         run: dotnet build --configuration $BUILD_CONFIGURATION --no-restore
@@ -52,7 +68,10 @@ jobs:
           dotnet test \
             --configuration $BUILD_CONFIGURATION \
             --collect:"XPlat Code Coverage"
-
+      - name: End Sonar Analysis
+        run: |
+          dotnet sonarscanner end \
+            /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
       - name: Publish API
         run: |
           dotnet publish src/PipelineLearning.Api/PipelineLearning.Api.csproj \
