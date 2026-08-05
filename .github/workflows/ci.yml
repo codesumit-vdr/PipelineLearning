@@ -47,8 +47,11 @@ jobs:
       - name: Build Solution
         run: dotnet build --configuration $BUILD_CONFIGURATION --no-restore
 
-      - name: Run Unit Tests
-        run: dotnet test --configuration $BUILD_CONFIGURATION --no-build
+      - name: Run Unit Tests with Coverage
+        run: |
+        dotnet test \
+        --configuration $BUILD_CONFIGURATION \
+        --collect:"XPlat Code Coverage"
 
       - name: Publish API
         run: |
