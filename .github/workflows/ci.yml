@@ -4,14 +4,22 @@ on:
   push:
     branches:
       - main
-      - feature/github-actions
-
+      - feature/**
   pull_request:
     branches:
       - main
 
+permissions:
+  contents: read
+
+env:
+  DOTNET_VERSION: '8.0.x'
+  BUILD_CONFIGURATION: Release
+
 jobs:
   build:
+
+    name: Build, Test & Publish
 
     runs-on: ubuntu-latest
 
@@ -23,22 +31,31 @@ jobs:
       - name: Setup .NET SDK
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '8.0.x'
+          dotnet-version: ${{ env.DOTNET_VERSION }}
 
-      - name: Restore NuGet Packages
+      - name: Cache NuGet Packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: Restore Dependencies
         run: dotnet restore
 
       - name: Build Solution
-        run: dotnet build --configuration Release --no-restore
+        run: dotnet build --configuration $BUILD_CONFIGURATION --no-restore
 
       - name: Run Unit Tests
-        run: dotnet test --configuration Release --no-build
+        run: dotnet test --configuration $BUILD_CONFIGURATION --no-build
 
       - name: Publish API
         run: |
           dotnet publish src/PipelineLearning.Api/PipelineLearning.Api.csproj \
-          --configuration Release \
-          --output ./publish
+            --configuration $BUILD_CONFIGURATION \
+            --no-build \
+            --output ./publish
 
       - name: Upload Build Artifact
         uses: actions/upload-artifact@v4
